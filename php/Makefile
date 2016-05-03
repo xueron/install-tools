@@ -9,20 +9,19 @@ PHP_FILENAME=php-7.0.6.tar.xz
 PHP_SHA256=1b237a9455e5476a425dbb9d99966bad68107747c601958cb9558a7fb49ab419
 
 # dep
-buildDeps=" \
-		  $(PHP_EXTRA_BUILD_DEPS)  \
-		  libcurl4-openssl-dev \
-		  libedit-dev \
-		  libsqlite3-dev \
-		  libssl-dev \
-		  libxml2-dev \
-		  libfreetype6-dev \
-		  libjpeg-dev \
-		  libmcrypt-dev \
-		  libpng12-dev \
-		  librabbitmq-dev \
-		  libyaml-dev \
-		  xz-utils"
+buildDeps= \
+		   $(PHP_EXTRA_BUILD_DEPS) \
+		   libcurl4-openssl-dev \
+		   libedit-dev \
+		   libsqlite3-dev \
+		   libssl-dev \
+		   libxml2-dev \
+		   libfreetype6-dev \
+		   libjpeg-dev \
+		   libmcrypt-dev \
+		   libpng12-dev \
+		   libyaml-dev \
+		   xz-utils
 
 # step0. prepare - phpize & runtime deps
 install-base: 
@@ -87,11 +86,12 @@ install-php:
 	&& chmod +x /etc/init.d/php-fpm \
 	&& { find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; } \
 	&& make clean \
+	&& cd - \
 	&& cp php-ext-* /usr/local/bin
 
 # step4. add ext
 install-ext:
-	set -xe \ 
+	set -xe \
 	&& apt-get install -y $(buildDeps) --no-install-recommends && rm -rf /var/lib/apt/lists/* \
 	&& php-ext-install -j"$$(nproc)" mcrypt bcmath soap pcntl zip sockets pdo_mysql \
 	&& php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ --with-png-dir=/usr \
@@ -99,14 +99,14 @@ install-ext:
 
 # for php 5.6 only, php 7 should manually install it
 install-phalcon: 
-	set -xe \ 
-	&& curl -fSL "https://github.com/phalcon/cphalcon/archive/phalcon-v2.0.10.tar.gz" -o /home/cphalcon.tgz \ 
-	&& cd /home \ 
-	&& tar -xvf cphalcon.tgz \ 
-	&& mv cphalcon-* phalcon \ 
-	&& cd phalcon/build && ./install \ 
-	&& php-ext-enable phalcon \ 
-	&& rm /home/cphalcon.tgz \ 
+	set -xe \
+	&& curl -fSL "https://github.com/phalcon/cphalcon/archive/phalcon-v2.0.10.tar.gz" -o /home/cphalcon.tgz \
+	&& cd /home \
+	&& tar -xvf cphalcon.tgz \
+	&& mv cphalcon-* phalcon \
+	&& cd phalcon/build && ./install \
+	&& php-ext-enable phalcon \
+	&& rm /home/cphalcon.tgz \
 	&& rm -rf /home/phalcon
 
 # 
