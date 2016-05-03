@@ -26,7 +26,7 @@ buildDeps=" \
 
 # step0. prepare - phpize & runtime deps
 install-base: 
-	apt-get update && apt-get install -y \ 
+	apt-get update && apt-get install -y \
 	autoconf \
 	file \
 	g++ \
