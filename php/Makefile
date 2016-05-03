@@ -87,27 +87,27 @@ install-php:
 	&& chmod +x /etc/init.d/php-fpm \
 	&& { find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; } \
 	&& make clean \
-	&& runDeps="$$( \
-		scanelf --needed --nobanner --recursive /usr/local \
-			| awk '{ gsub(/,/, "\nso:", $$2); print "so:" $$2 }' \
-			| sort -u \
-			| xargs -r apk info --installed \
-			| sort -u \
-		)" \
-	&& apk add --virtual .php-rundeps $$runDeps \
-	&& apk del .build-deps \
 	&& cp php-ext-* /usr/local/bin
 
 # step4. add ext
 install-ext:
-	set -xe \
-        && apt-get install -y $$buildDeps --no-install-recommends && rm -rf /var/lib/apt/lists/* \
+	set -xe \ 
+	&& apt-get install -y $(buildDeps) --no-install-recommends && rm -rf /var/lib/apt/lists/* \
 	&& php-ext-install -j"$$(nproc)" mcrypt bcmath soap pcntl zip sockets pdo_mysql \
 	&& php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ --with-png-dir=/usr \
 	&& php-ext-install -j"$$(nproc)" gd
 
-#
-install-phalcon:
+# for php 5.6 only, php 7 should manually install it
+install-phalcon: 
+	set -xe \ 
+	&& curl -fSL "https://github.com/phalcon/cphalcon/archive/phalcon-v2.0.10.tar.gz" -o /home/cphalcon.tgz \ 
+	&& cd /home \ 
+	&& tar -xvf cphalcon.tgz \ 
+	&& mv cphalcon-* phalcon \ 
+	&& cd phalcon/build && ./install \ 
+	&& php-ext-enable phalcon \ 
+	&& rm /home/cphalcon.tgz \ 
+	&& rm -rf /home/phalcon
 
 # 
 uninstall-deps:
