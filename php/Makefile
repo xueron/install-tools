@@ -1,15 +1,32 @@
+# PATH
 SRC=/usr/src/php
 PHP_INI_DIR=/usr/local/etc/php
 
 # version setting
 GPG_KEYS=1A4E8B7277C42E53DBA9C7B9BCAA30EA9C0D5763
-PHP_VERSION=7.0.5
-PHP_FILENAME=php-7.0.5.tar.xz
-PHP_SHA256=c41f1a03c24119c0dd9b741cdb67880486e64349fc33527767f6dc28d3803abb
+PHP_VERSION=7.0.6
+PHP_FILENAME=php-7.0.6.tar.xz
+PHP_SHA256=1b237a9455e5476a425dbb9d99966bad68107747c601958cb9558a7fb49ab419
+
+# dep
+buildDeps=" \
+		  $(PHP_EXTRA_BUILD_DEPS)  \
+		  libcurl4-openssl-dev \
+		  libedit-dev \
+		  libsqlite3-dev \
+		  libssl-dev \
+		  libxml2-dev \
+		  libfreetype6-dev \
+		  libjpeg-dev \
+		  libmcrypt-dev \
+		  libpng12-dev \
+		  librabbitmq-dev \
+		  libyaml-dev \
+		  xz-utils"
 
 # step0. prepare - phpize & runtime deps
 install-base: 
-	apt-get update && apt-get install -y \
+	apt-get update && apt-get install -y \ 
 	autoconf \
 	file \
 	g++ \
@@ -42,25 +59,11 @@ download:
 	&& tar -xf "$(PHP_FILENAME)" -C $(SRC) --strip-components=1 \
 	&& rm "$(PHP_FILENAME)"
 
+# install deps
 install-deps:
 	set -xe \
-	&& buildDeps=" \
-		$(PHP_EXTRA_BUILD_DEPS) \
-		libcurl4-openssl-dev \
-		libedit-dev \
-		libsqlite3-dev \
-		libssl-dev \
-		libxml2-dev \
-		libfreetype6-dev \
-		libjpeg-dev \
-		libmcrypt-dev \
-		libpng12-dev \
-		librabbitmq-dev \
-		libyaml-dev \
-		xz-utils \
-		" \
 	&& apt-get update \
-	&& apt-get install -y $$buildDeps --no-install-recommends && rm -rf /var/lib/apt/lists/*
+	&& apt-get install -y $(buildDeps) --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
 # step3. build
 install-php:
@@ -80,6 +83,8 @@ install-php:
 		--with-zlib \
 	&& make -j"$$(nproc)" \
 	&& make install \
+	&& cp $(SRC)/sapi/fpm/init.d.php-fpm /etc/init.d/php-fpm \
+	&& chmod +x /etc/init.d/php-fpm \
 	&& { find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; } \
 	&& make clean \
 	&& runDeps="$$( \
@@ -104,3 +109,7 @@ install-ext:
 #
 install-phalcon:
 
+# 
+uninstall-deps:
+	set -xe \
+	&& apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false -o APT::AutoRemove::SuggestsImportant=false $(buildDeps)
